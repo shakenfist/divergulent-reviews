@@ -5,8 +5,8 @@ patch classification: the append-only ledger of verdicts (deterministic rules, a
 verified LLM triage tier, and signed human review) plus the review axes
 (security-risk, install-base *reach*, reviewability).
 
-This repository holds exactly one data file under version control — **`ledger.jsonl`**,
-a canonical, byte-deterministic export of the ledger. That export is what CI
+This repository holds the ledger under version control as **`ledger/`** — a
+canonical, byte-deterministic export of the ledger sqlite. That export is what CI
 consumes to build and publish the signed classification bundle clients download.
 Committing it (rather than the sqlite) means:
 
@@ -16,14 +16,23 @@ Committing it (rather than the sqlite) means:
   repository's remote (the working `ledger.sqlite` lives on scratch storage);
 - CI can **reach** it (GitHub Actions cannot read a local scratch disk).
 
+The export is a *directory* of compact JSONL, not one file: the two big
+append-only tables (`decision`, `observation`) are **sharded by calendar month**,
+so no single file grows toward GitHub's 100 MB per-file limit as the append-only
+ledger accumulates. New work appends to the current month's shard.
+
 ## Layout
 
 ```
 .divergulent          # data-root marker (divergulent-classify discovers the root here)
-ledger.jsonl          # THE tracked artifact: the ledger export (source of truth)
+ledger/               # THE tracked artifact: the sharded ledger export (source of truth)
+  manifest.json       #   {export_schema, shards, rows}
+  decision-YYYY-MM.jsonl     #   decisions, sharded by month
+  observation-YYYY-MM.jsonl  #   observations (risk/reach/reviewability), sharded by month
+  rule.jsonl, note.jsonl, review_queue.jsonl, meta.jsonl   #   small tables, whole
 corpus/               # the working corpus (gitignored except the notes below)
   bodies/             #   content-addressed patch bodies        (regenerable)
-  ledger.sqlite       #   the live ledger you mutate as you review (regenerable from ledger.jsonl)
+  ledger.sqlite       #   the live ledger you mutate as you review (regenerable from ledger/)
   fingerprints.sqlite #   the fingerprint index                 (regenerable)
   popcon.sqlite       #   the reach-axis install-base snapshot   (regenerable)
   findings.md,        #   your analysis notes                    (tracked)
@@ -32,22 +41,22 @@ cache/                # client-style published cache dir (gitignored)
 venv/                 # python virtualenv (gitignored; recreate, never move)
 ```
 
-Everything except `ledger.jsonl` and the `*.md` notes is regenerable and
-gitignored. The `ledger.sqlite` is rebuilt from `ledger.jsonl` with
-`divergulent-classify import ledger.jsonl`; the corpus is rebuilt from the Debian
+Everything except the `ledger/` export and the `*.md` notes is regenerable and
+gitignored. The `ledger.sqlite` is rebuilt from the export with
+`divergulent-classify import ledger`; the corpus is rebuilt from the Debian
 archive.
 
 ## The publish loop
 
 ```bash
 # after a review session:
-divergulent-classify export            # ledger.sqlite -> ledger.jsonl (canonical)
-git add ledger.jsonl && git diff --cached   # review "the verdicts I just added"
+divergulent-classify export            # ledger.sqlite -> ledger/ (sharded, canonical)
+git add ledger && git diff --cached    # review "the verdicts I just added"
 git commit && git push                 # the human-in-the-loop publish gate
 
 # then run divergulent's build-classification workflow (workflow_dispatch,
-# publish: true), which checks out this repo, imports ledger.jsonl, builds the
-# lean signed bundle, and uploads it to the rolling 'classification' release.
+# publish: true), which checks out this repo, imports ledger/, builds the lean
+# signed bundle, and uploads it to the rolling 'classification' release.
 ```
 
 See `docs/plans/PLAN-patch-classification-phase-05-bundle.md` in the divergulent
