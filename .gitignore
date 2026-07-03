@@ -1,0 +1,19 @@
+# The divergulent review data root. The ONLY tracked data file is the ledger
+# JSONL export (ledger.jsonl) -- the reviewable, durable source of truth that CI
+# builds the published classification bundle from. Everything else here is large,
+# binary, and regenerable, and must never be committed.
+
+# Python virtualenv (hard-codes absolute paths; recreate, never move/commit).
+venv/
+
+# The client-style published-cache dir.
+cache/
+
+# Corpus working files -- all regenerable from the Debian archive:
+#   - bodies/            content-addressed patch bodies
+#   - *.sqlite           the live ledger, the fingerprint index, the popcon snapshot
+#   - packages.jsonl /   corpus build dumps (NOT the ledger export, which lives
+#     patches.jsonl      at the repo root as ledger.jsonl)
+corpus/bodies/
+corpus/*.sqlite
+corpus/*.jsonl
