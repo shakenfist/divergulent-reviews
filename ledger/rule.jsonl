@@ -6,6 +6,7 @@
 {"category_enum_version":1,"description":"change normalises to empty (mode-only / pure-decoration) -> packaging","kind":"heuristic","purity":"pure","retired":0,"rule_id":"empty","version":1}
 {"category_enum_version":1,"description":"touches only ignore files with ignore-pattern lines -> packaging","kind":"heuristic","purity":"pure","retired":0,"rule_id":"ignore-file-only","version":1}
 {"category_enum_version":1,"description":"claim-blind LLM triage (claude-sonnet-4-6), verified adversarially","kind":"llm","purity":"pure","retired":0,"rule_id":"llm-triage:claude-sonnet-4-6","version":1}
+{"category_enum_version":2,"description":"claimed CVE confirmed against the Debian Security Tracker for this source -> security","kind":"heuristic","purity":"external","retired":0,"rule_id":"security-tracker-cve","version":1}
 {"category_enum_version":1,"description":"not settled by deterministic content rules -> unknown (phase-4 residue)","kind":"heuristic","purity":"pure","retired":0,"rule_id":"substantive","version":1}
 {"category_enum_version":2,"description":"all touched files are tests (non-shipping) -> test","kind":"heuristic","purity":"pure","retired":0,"rule_id":"test-only","version":1}
 {"category_enum_version":1,"description":"change differs only in whitespace (no semantic change) -> packaging","kind":"heuristic","purity":"pure","retired":0,"rule_id":"whitespace-only","version":1}
