@@ -17,9 +17,13 @@ Committing it (rather than the sqlite) means:
 - CI can **reach** it (GitHub Actions cannot read a local scratch disk).
 
 The export is a *directory* of compact JSONL, not one file: the two big
-append-only tables (`decision`, `observation`) are **sharded by calendar month**,
-so no single file grows toward GitHub's 100 MB per-file limit as the append-only
-ledger accumulates. New work appends to the current month's shard.
+append-only tables (`decision`, `observation`) are **sharded by ISO week**, so no
+single file grows toward GitHub's 100 MB per-file limit as the append-only ledger
+accumulates. New work appends to the current week's shard.
+
+Shards were monthly until 2026-08, when `observation-2026-08.jsonl` reached 51 MB
+and GitHub began warning on every push (it rejects files over 100 MB). Weekly
+buckets keep the largest shard near 20 MB at current volume.
 
 ## Layout
 
@@ -27,8 +31,8 @@ ledger accumulates. New work appends to the current month's shard.
 .divergulent          # data-root marker (divergulent-classify discovers the root here)
 ledger/               # THE tracked artifact: the sharded ledger export (source of truth)
   manifest.json       #   {export_schema, shards, rows}
-  decision-YYYY-MM.jsonl     #   decisions, sharded by month
-  observation-YYYY-MM.jsonl  #   observations (risk/reach/reviewability), sharded by month
+  decision-YYYY-Www.jsonl    #   decisions, sharded by ISO week
+  observation-YYYY-Www.jsonl #   observations (risk/reach/reviewability), sharded by week
   rule.jsonl, note.jsonl, review_queue.jsonl, meta.jsonl   #   small tables, whole
 corpus/               # the working corpus (gitignored except the notes below)
   bodies/             #   content-addressed patch bodies        (regenerable)
